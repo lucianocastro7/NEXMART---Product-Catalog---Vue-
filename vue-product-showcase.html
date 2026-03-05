@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vue Product Showcase — E-commerce Catalog</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.prod.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,300&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --surface2: #1c1c26;
+      --accent: #ff4d6d;
+      --accent2: #f7c948;
+      --text: #e8e8f0;
+      --muted: #6b6b80;
+      --border: rgba(255,255,255,0.07);
+      --radius: 12px;
+      --font-display: 'Bebas Neue', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+    }
+
+    [data-theme="light"] {
+      --bg: #f4f3ee;
+      --surface: #ffffff;
+      --surface2: #e8e6dc;
+      --text: #1a1a2e;
+      --muted: #7a7a8a;
+      --border: rgba(0,0,0,0.1);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(10,10,15,0.85);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px;
+    }
+    [data-theme="light"] .header { background: rgba(244,243,238,0.88); }
+
+    .logo {
+      font-family: var(--font-display);
+      font-size: 1.8rem;
+      letter-spacing: 2px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header-actions { display: flex; align-items: center; gap: 1rem; }
+
+    .btn-icon {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .2s;
+    }
+    .btn-icon:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    .badge {
+      background: var(--accent);
+      color: #fff;
+      font-size: .65rem;
+      font-weight: 700;
+      border-radius: 999px;
+      padding: 1px 6px;
+      margin-left: -6px; margin-top: -12px;
+      position: relative;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative; overflow: hidden;
+      padding: 5rem 2rem 4rem;
+      text-align: center;
+    }
+    .hero-bg {
+      position: absolute; inset: 0; z-index: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% -20%, rgba(255,77,109,0.22), transparent),
+                  radial-gradient(ellipse 60% 40% at 80% 80%, rgba(247,201,72,0.12), transparent);
+    }
+    .hero-content { position: relative; z-index: 1; }
+    .hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(3rem, 8vw, 7rem);
+      letter-spacing: 4px;
+      line-height: .95;
+      margin-bottom: 1rem;
+    }
+    .hero h1 span { color: var(--accent); }
+    .hero p { color: var(--muted); font-size: 1.1rem; max-width: 480px; margin: 0 auto 2rem; font-weight: 300; }
+
+    /* ── FILTERS ── */
+    .filters-bar {
+      padding: 1.5rem 2rem;
+      display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 64px; z-index: 90;
+      background: var(--bg);
+    }
+    .search-wrap { position: relative; flex: 1; min-width: 220px; }
+    .search-wrap input {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: var(--radius);
+      padding: .6rem 1rem .6rem 2.5rem;
+      font-family: var(--font-body);
+      font-size: .95rem;
+      outline: none; transition: border-color .2s;
+    }
+    .search-wrap input:focus { border-color: var(--accent); }
+    .search-icon {
+      position: absolute; left: .75rem; top: 50%; transform: translateY(-50%);
+      color: var(--muted); font-size: .9rem; pointer-events: none;
+    }
+
+    .filter-chips { display: flex; gap: .5rem; flex-wrap: wrap; }
+    .chip {
+      padding: .4rem 1rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      font-size: .82rem; font-weight: 500;
+      cursor: pointer; transition: all .2s;
+      white-space: nowrap;
+    }
+    .chip.active, .chip:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    .sort-select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: var(--radius);
+      padding: .5rem .8rem;
+      font-family: var(--font-body);
+      font-size: .85rem;
+      outline: none; cursor: pointer;
+    }
+
+    /* ── MAIN ── */
+    .main { padding: 2rem; max-width: 1400px; margin: 0 auto; }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      letter-spacing: 2px;
+      margin-bottom: 1.5rem;
+      display: flex; align-items: center; gap: .75rem;
+    }
+    .section-title .count {
+      font-family: var(--font-body);
+      font-size: .8rem; font-weight: 500;
+      background: var(--surface2);
+      padding: .2rem .6rem;
+      border-radius: 999px;
+      color: var(--muted);
+    }
+
+    /* ── PRODUCT GRID ── */
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    /* ── PRODUCT CARD ── */
+    .product-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform .25s, box-shadow .25s, border-color .25s;
+      animation: fadeUp .4s ease both;
+      position: relative;
+    }
+    .product-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 50px rgba(0,0,0,.4);
+      border-color: rgba(255,77,109,0.3);
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-img {
+      width: 100%; aspect-ratio: 1/1;
+      object-fit: cover;
+      display: block;
+      background: var(--surface2);
+    }
+    .card-img-placeholder {
+      width: 100%; aspect-ratio: 1/1;
+      background: linear-gradient(135deg, var(--surface2), var(--surface));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3rem; color: var(--muted);
+    }
+
+    .card-body { padding: 1.2rem; }
+    .card-category {
+      font-size: .72rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1.5px;
+      color: var(--accent2); margin-bottom: .4rem;
+    }
+    .card-title {
+      font-size: 1rem; font-weight: 600;
+      line-height: 1.4; margin-bottom: .75rem;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .card-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: .75rem;
+    }
+    .price {
+      font-family: var(--font-display);
+      font-size: 1.5rem; letter-spacing: 1px;
+      color: var(--accent);
+    }
+    .rating {
+      display: flex; align-items: center; gap: .3rem;
+      font-size: .82rem; color: var(--accent2);
+    }
+    .stars { display: flex; gap: 1px; }
+    .star { font-size: .7rem; }
+
+    .card-actions {
+      display: flex; gap: .5rem; margin-top: 1rem;
+    }
+    .btn {
+      flex: 1; padding: .55rem;
+      border-radius: 8px; border: none;
+      cursor: pointer; font-family: var(--font-body);
+      font-weight: 600; font-size: .82rem;
+      transition: all .2s;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #ff2050; }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-fav {
+      width: 36px; flex: none; border: 1px solid var(--border);
+      background: transparent; color: var(--muted);
+      border-radius: 8px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; transition: all .2s;
+    }
+    .btn-fav.active { background: rgba(255,77,109,0.1); border-color: var(--accent); color: var(--accent); }
+    .btn-fav:hover { border-color: var(--accent); color: var(--accent); }
+
+    .card-badge {
+      position: absolute; top: 12px; left: 12px;
+      background: var(--accent); color: #fff;
+      font-size: .68rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px;
+      padding: 3px 8px; border-radius: 6px;
+    }
+
+    /* ── STATES ── */
+    .state-box {
+      grid-column: 1/-1;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 1rem; padding: 5rem 1rem;
+      color: var(--muted); text-align: center;
+    }
+    .state-box .icon { font-size: 3rem; }
+    .state-box h3 { font-size: 1.2rem; font-weight: 600; color: var(--text); }
+    .state-box p { font-size: .9rem; max-width: 300px; }
+
+    .spinner {
+      width: 44px; height: 44px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-card {
+      grid-column: 1/-1;
+      background: rgba(255,77,109,0.08);
+      border: 1px solid rgba(255,77,109,0.25);
+      border-radius: 16px; padding: 2rem; text-align: center;
+    }
+    .error-card .err-icon { font-size: 2.5rem; margin-bottom: .75rem; }
+    .error-card h3 { color: var(--accent); margin-bottom: .5rem; }
+    .error-card p { color: var(--muted); font-size: .9rem; margin-bottom: 1rem; }
+    .btn-retry {
+      background: var(--accent); color: #fff;
+      border: none; border-radius: 8px; padding: .6rem 1.5rem;
+      cursor: pointer; font-family: var(--font-body); font-weight: 600;
+    }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 1rem;
+      animation: fadeIn .2s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      max-width: 560px; width: 100%;
+      max-height: 90vh; overflow-y: auto;
+      animation: slideUp .25s ease;
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal-img {
+      width: 100%; aspect-ratio: 1.5/1;
+      object-fit: cover;
+      border-radius: 20px 20px 0 0;
+    }
+    .modal-img-placeholder {
+      width: 100%; aspect-ratio: 1.5/1;
+      background: linear-gradient(135deg, var(--surface2), var(--bg));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 5rem;
+      border-radius: 20px 20px 0 0;
+    }
+
+    .modal-body { padding: 1.75rem; }
+    .modal-category { color: var(--accent2); font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: .5rem; }
+    .modal-title { font-size: 1.5rem; font-weight: 700; margin-bottom: .5rem; }
+    .modal-price { font-family: var(--font-display); font-size: 2.2rem; color: var(--accent); margin-bottom: 1rem; }
+    .modal-desc { color: var(--muted); line-height: 1.7; font-size: .95rem; margin-bottom: 1.5rem; }
+    .modal-meta { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; margin-bottom: 1.5rem; }
+    .meta-item { background: var(--surface2); border-radius: 10px; padding: .75rem; }
+    .meta-label { font-size: .72rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: .2rem; }
+    .meta-value { font-weight: 600; font-size: .95rem; }
+    .modal-footer { display: flex; gap: .75rem; }
+    .modal-close {
+      position: absolute; top: 1rem; right: 1rem;
+      background: rgba(0,0,0,0.5); border: none; color: #fff;
+      width: 34px; height: 34px; border-radius: 50%;
+      cursor: pointer; font-size: 1rem;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .modal-wrap { position: relative; }
+
+    /* ── FAVORITES PANEL ── */
+    .fav-panel {
+      position: fixed; right: 0; top: 0; bottom: 0; z-index: 150;
+      width: min(380px, 100vw);
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      animation: slideRight .25s ease;
+    }
+    @keyframes slideRight {
+      from { transform: translateX(100%); }
+      to { transform: translateX(0); }
+    }
+    .fav-header {
+      padding: 1.5rem; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .fav-title { font-family: var(--font-display); font-size: 1.5rem; letter-spacing: 2px; }
+    .fav-list { flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: .75rem; }
+    .fav-item {
+      display: flex; align-items: center; gap: .75rem;
+      background: var(--surface2); border-radius: 10px; padding: .75rem;
+      border: 1px solid var(--border);
+    }
+    .fav-item-img {
+      width: 52px; height: 52px; object-fit: cover; border-radius: 8px;
+      background: var(--bg); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem;
+    }
+    .fav-item-name { font-size: .88rem; font-weight: 600; flex: 1; }
+    .fav-item-price { font-family: var(--font-display); color: var(--accent); font-size: 1rem; }
+    .fav-remove { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1rem; padding: 4px; }
+    .fav-remove:hover { color: var(--accent); }
+    .fav-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--muted); gap: .5rem; }
+
+    /* ── VUEX DEBUG ── */
+    .vuex-debug {
+      position: fixed; bottom: 1rem; left: 1rem; z-index: 100;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px; padding: 1rem;
+      font-size: .72rem; font-family: monospace; color: var(--muted);
+      max-width: 260px;
+    }
+    .vuex-debug h4 { color: var(--accent2); margin-bottom: .5rem; font-size: .78rem; }
+    .vuex-debug .kv { display: flex; justify-content: space-between; gap: 1rem; margin-bottom: 2px; }
+    .vuex-debug .val { color: var(--text); }
+    .debug-toggle {
+      position: fixed; bottom: 1rem; left: 1rem; z-index: 101;
+      background: var(--accent2); border: none; color: var(--bg);
+      padding: .4rem .7rem; border-radius: 8px; font-size: .7rem; font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      margin-top: 4rem;
+      border-top: 1px solid var(--border);
+      padding: 2rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: .85rem;
+    }
+    .footer strong { color: var(--accent); }
+
+    /* ── SCROLL TOP ── */
+    .scroll-top {
+      position: fixed; bottom: 4rem; right: 1.5rem; z-index: 120;
+      background: var(--accent); color: #fff;
+      width: 42px; height: 42px; border-radius: 50%; border: none;
+      cursor: pointer; font-size: 1.1rem;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 20px rgba(255,77,109,.4);
+      animation: fadeIn .3s ease;
+    }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 300;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      padding: .8rem 1.2rem; border-radius: 10px;
+      font-size: .88rem; font-weight: 500;
+      animation: toastIn .3s ease;
+      max-width: 280px;
+    }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateX(30px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      .hero h1 { font-size: 3rem; }
+      .product-grid { grid-template-columns: 1fr 1fr; gap: 1rem; }
+      .main { padding: 1rem; }
+      .vuex-debug { display: none; }
+      .filters-bar { padding: 1rem; }
+    }
+    @media (max-width: 400px) {
+      .product-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="app" :data-theme="store.state.ui.theme">
+
+  <!-- ── HEADER (Lección 1) ── -->
+  <header class="header">
+    <div class="logo">NEXMART</div>
+    <div class="header-actions">
+      <span style="font-size:.82rem; color:var(--muted); font-weight:500;">
+        {{ filteredProducts.length }} productos
+      </span>
+      <button class="btn-icon" @click="toggleTheme" title="Cambiar tema">
+        {{ store.state.ui.theme === 'dark' ? '☀️' : '🌙' }}
+      </button>
+      <div style="display:flex; align-items:center;">
+        <button class="btn-icon" @click="showFavPanel = !showFavPanel" title="Favoritos">❤️</button>
+        <span class="badge" v-if="favorites.length">{{ favorites.length }}</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── HERO ── -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-content">
+      <h1>CATÁLOGO<br><span>DIGITAL</span></h1>
+      <p>Explora nuestra colección curada de productos tecnológicos de alta calidad.</p>
+    </div>
+  </section>
+
+  <!-- ── FILTERS (Lección 2 — filtro por categoría) ── -->
+  <div class="filters-bar">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input
+        v-model="searchQuery"
+        @input="onSearch"
+        placeholder="Buscar productos..."
+        type="text"
+      />
+    </div>
+    <div class="filter-chips">
+      <button
+        v-for="cat in categories"
+        :key="cat"
+        class="chip"
+        :class="{ active: activeCategory === cat }"
+        @click="setCategory(cat)"
+      >{{ cat === 'all' ? 'Todos' : cat }}</button>
+    </div>
+    <select class="sort-select" v-model="sortBy" @change="onSort">
+      <option value="default">Ordenar</option>
+      <option value="price-asc">Precio ↑</option>
+      <option value="price-desc">Precio ↓</option>
+      <option value="rating">⭐ Rating</option>
+      <option value="name">A → Z</option>
+    </select>
+  </div>
+
+  <!-- ── MAIN CONTENT ── -->
+  <main class="main">
+    <div class="section-title">
+      PRODUCTOS
+      <span class="count">{{ filteredProducts.length }} resultados</span>
+    </div>
+
+    <!-- Product Grid -->
+    <div class="product-grid">
+
+      <!-- Loading State (Lección 2) -->
+      <div v-if="store.state.productos.loading" class="state-box">
+        <div class="spinner"></div>
+        <h3>Cargando productos...</h3>
+        <p>Conectando con la API</p>
+      </div>
+
+      <!-- Error State (Lección 2 + prueba unitaria Lección 4) -->
+      <div v-else-if="store.state.productos.error" class="error-card" id="error-state">
+        <div class="err-icon">⚠️</div>
+        <h3>Error al cargar</h3>
+        <p>{{ store.state.productos.error }}</p>
+        <button class="btn-retry" @click="fetchProducts">Reintentar</button>
+      </div>
+
+      <!-- Empty State (Lección 2) -->
+      <div v-else-if="filteredProducts.length === 0" class="state-box">
+        <div class="icon">🔎</div>
+        <h3>Sin resultados</h3>
+        <p>No se encontraron productos para "{{ searchQuery || activeCategory }}"</p>
+      </div>
+
+      <!-- Product Cards (Lección 1 — componente ProductCard) -->
+      <template v-else>
+        <div
+          v-for="(product, i) in filteredProducts"
+          :key="product.id"
+          class="product-card"
+          :style="{ animationDelay: (i % 12 * 0.04) + 's' }"
+          @click="openModal(product)"
+          :id="'product-card-' + product.id"
+          data-testid="product-card"
+        >
+          <!-- Badge -->
+          <span v-if="product.rating?.rate >= 4.5" class="card-badge">⭐ TOP</span>
+          <span v-else-if="product.price < 20" class="card-badge" style="background:var(--accent2);color:#1a1a2e;">OFERTA</span>
+
+          <!-- Image -->
+          <img
+            v-if="product.image"
+            :src="product.image"
+            :alt="product.title"
+            class="card-img"
+            loading="lazy"
+            @error="e => e.target.style.display='none'"
+          />
+          <div v-else class="card-img-placeholder">{{ getCategoryEmoji(product.category) }}</div>
+
+          <!-- Body -->
+          <div class="card-body">
+            <div class="card-category">{{ product.category }}</div>
+            <div class="card-title">{{ product.title }}</div>
+            <div class="card-footer">
+              <div class="price">${{ product.price }}</div>
+              <div class="rating" v-if="product.rating">
+                <div class="stars">
+                  <span
+                    v-for="s in 5" :key="s"
+                    class="star"
+                    :style="{ color: s <= Math.round(product.rating.rate) ? 'var(--accent2)' : 'var(--muted)' }"
+                  >★</span>
+                </div>
+                <span style="color:var(--muted)">{{ product.rating.rate }}</span>
+              </div>
+            </div>
+            <div class="card-actions" @click.stop>
+              <button class="btn btn-primary" @click="addToCart(product)">+ Agregar</button>
+              <button
+                class="btn-fav"
+                :class="{ active: isFavorite(product.id) }"
+                @click="toggleFavorite(product)"
+                :title="isFavorite(product.id) ? 'Quitar favorito' : 'Añadir favorito'"
+              >{{ isFavorite(product.id) ? '❤️' : '🤍' }}</button>
+            </div>
+          </div>
+        </div>
+      </template>
+
+    </div><!-- /grid -->
+
+    <!-- Vuex State Panel (Lección 3) -->
+    <div v-if="showDebug" class="vuex-debug" style="position:fixed; bottom:3.5rem; left:1rem;">
+      <h4>🗃️ VUEX STORE</h4>
+      <div class="kv"><span>productos.total</span><span class="val">{{ store.state.productos.items.length }}</span></div>
+      <div class="kv"><span>filtros.categoria</span><span class="val">{{ store.state.filtros.categoria }}</span></div>
+      <div class="kv"><span>filtros.busqueda</span><span class="val">"{{ store.state.filtros.busqueda }}"</span></div>
+      <div class="kv"><span>filtros.orden</span><span class="val">{{ store.state.filtros.orden }}</span></div>
+      <div class="kv"><span>favoritos.count</span><span class="val">{{ store.state.favoritos.items.length }}</span></div>
+      <div class="kv"><span>cart.count</span><span class="val">{{ store.state.ui.cartCount }}</span></div>
+      <div class="kv"><span>loading</span><span class="val">{{ store.state.productos.loading }}</span></div>
+    </div>
+    <button class="debug-toggle" @click="showDebug = !showDebug">
+      {{ showDebug ? '✕ Vuex' : '🗃️ Vuex' }}
+    </button>
+
+  </main><!-- /main -->
+
+  <!-- ── FOOTER (Lección 1) ── -->
+  <footer class="footer">
+    <strong>NEXMART</strong> — Vue Product Showcase · 
+    Módulo 7: Desarrollo Front-End con Framework Vue ·
+    Fake Store API · Vuex · Vue 3
+  </footer>
+
+  <!-- ── PRODUCT MODAL (detalle individual, Lección 1) ── -->
+  <div class="modal-overlay" v-if="selectedProduct" @click.self="selectedProduct = null">
+    <div class="modal-wrap">
+      <button class="modal-close" @click="selectedProduct = null">✕</button>
+      <div class="modal">
+        <img
+          v-if="selectedProduct.image"
+          :src="selectedProduct.image"
+          :alt="selectedProduct.title"
+          class="modal-img"
+        />
+        <div v-else class="modal-img-placeholder">{{ getCategoryEmoji(selectedProduct.category) }}</div>
+        <div class="modal-body">
+          <div class="modal-category">{{ selectedProduct.category }}</div>
+          <div class="modal-title">{{ selectedProduct.title }}</div>
+          <div class="modal-price">${{ selectedProduct.price }}</div>
+          <p class="modal-desc">{{ selectedProduct.description }}</p>
+          <div class="modal-meta">
+            <div class="meta-item">
+              <div class="meta-label">Rating</div>
+              <div class="meta-value">⭐ {{ selectedProduct.rating?.rate }} / 5</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-label">Reseñas</div>
+              <div class="meta-value">{{ selectedProduct.rating?.count }} reviews</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-label">ID</div>
+              <div class="meta-value">#{{ selectedProduct.id }}</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-label">Categoría</div>
+              <div class="meta-value" style="text-transform:capitalize;">{{ selectedProduct.category }}</div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-primary" style="flex:2" @click="addToCart(selectedProduct); selectedProduct = null">
+              🛒 Agregar al carrito
+            </button>
+            <button
+              class="btn btn-outline"
+              style="flex:1"
+              @click="toggleFavorite(selectedProduct)"
+            >{{ isFavorite(selectedProduct.id) ? '❤️ Guardado' : '🤍 Guardar' }}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── FAVORITES PANEL (Lección 3 — módulo favoritos Vuex) ── -->
+  <div class="modal-overlay" v-if="showFavPanel" @click.self="showFavPanel = false" style="justify-content:flex-end;padding:0;">
+    <div class="fav-panel">
+      <div class="fav-header">
+        <div class="fav-title">FAVORITOS</div>
+        <button class="btn-icon" @click="showFavPanel = false">✕</button>
+      </div>
+      <div class="fav-list" v-if="favorites.length">
+        <div class="fav-item" v-for="p in favorites" :key="p.id">
+          <div class="fav-item-img" style="overflow:hidden; border-radius:8px;">
+            <img v-if="p.image" :src="p.image" :alt="p.title" style="width:52px;height:52px;object-fit:cover;" />
+            <span v-else>{{ getCategoryEmoji(p.category) }}</span>
+          </div>
+          <div style="flex:1; min-width:0;">
+            <div class="fav-item-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ p.title }}</div>
+            <div class="fav-item-price">${{ p.price }}</div>
+          </div>
+          <button class="fav-remove" @click="toggleFavorite(p)">✕</button>
+        </div>
+      </div>
+      <div class="fav-empty" v-else>
+        <span style="font-size:3rem;">🤍</span>
+        <p>No tienes favoritos aún</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" v-if="toast">{{ toast }}</div>
+
+  <!-- Scroll Top -->
+  <button class="scroll-top" v-if="scrolled" @click="window.scrollTo({top:0})">▲</button>
+
+</div><!-- /app -->
+
+<script>
+const { createApp, reactive, computed, onMounted, ref, watch } = Vue;
+
+// ═══════════════════════════════════════════════
+//  VUEX STORE SIMULADO (Lección 3)
+//  Módulos: productos, filtros, favoritos, ui
+// ═══════════════════════════════════════════════
+const store = reactive({
+  state: {
+    productos: {
+      items: [],
+      loading: false,
+      error: null,
+    },
+    filtros: {
+      categoria: 'all',
+      busqueda: '',
+      orden: 'default',
+    },
+    favoritos: {
+      items: [],
+    },
+    ui: {
+      theme: 'dark',
+      cartCount: 0,
+    }
+  },
+
+  // ── MUTATIONS (Lección 3)
+  mutations: {
+    SET_LOADING(val) { store.state.productos.loading = val; },
+    SET_ERROR(val)   { store.state.productos.error = val; },
+    SET_PRODUCTS(items) { store.state.productos.items = items; },
+    SET_CATEGORY(cat) { store.state.filtros.categoria = cat; },
+    SET_SEARCH(q)    { store.state.filtros.busqueda = q; },
+    SET_SORT(s)      { store.state.filtros.orden = s; },
+    TOGGLE_FAV(product) {
+      const idx = store.state.favoritos.items.findIndex(p => p.id === product.id);
+      if (idx === -1) store.state.favoritos.items.push(product);
+      else store.state.favoritos.items.splice(idx, 1);
+    },
+    SET_THEME(t) { store.state.ui.theme = t; },
+    INC_CART()   { store.state.ui.cartCount++; },
+  },
+
+  // ── ACTIONS (Lección 3 — consumo API en acción Vuex)
+  async actions_fetchProducts() {
+    store.mutations.SET_LOADING(true);
+    store.mutations.SET_ERROR(null);
+    try {
+      const res = await fetch('https://fakestoreapi.com/products');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      store.mutations.SET_PRODUCTS(data);
+    } catch (err) {
+      store.mutations.SET_ERROR(err.message || 'Error al conectar con la API');
+    } finally {
+      store.mutations.SET_LOADING(false);
+    }
+  },
+
+  // ── GETTERS (Lección 3 — getters para productos filtrados)
+  get getters() {
+    return {
+      filteredProducts: computed(() => {
+        let list = [...store.state.productos.items];
+        const { categoria, busqueda, orden } = store.state.filtros;
+        if (categoria !== 'all') {
+          list = list.filter(p => p.category === categoria);
+        }
+        if (busqueda.trim()) {
+          const q = busqueda.toLowerCase();
+          list = list.filter(p =>
+            p.title.toLowerCase().includes(q) ||
+            p.description?.toLowerCase().includes(q)
+          );
+        }
+        if (orden === 'price-asc')  list.sort((a,b) => a.price - b.price);
+        if (orden === 'price-desc') list.sort((a,b) => b.price - a.price);
+        if (orden === 'rating')     list.sort((a,b) => (b.rating?.rate||0) - (a.rating?.rate||0));
+        if (orden === 'name')       list.sort((a,b) => a.title.localeCompare(b.title));
+        return list;
+      }),
+      categories: computed(() => {
+        const cats = [...new Set(store.state.productos.items.map(p => p.category))];
+        return ['all', ...cats];
+      }),
+      favorites: computed(() => store.state.favoritos.items),
+    };
+  }
+});
+
+// ═══════════════════════════════════════════════
+//  APP PRINCIPAL
+// ═══════════════════════════════════════════════
+createApp({
+  setup() {
+    // Reactive refs (Lección 1 — ciclo de vida + estado local)
+    const selectedProduct = ref(null);
+    const showFavPanel    = ref(false);
+    const showDebug       = ref(false);
+    const toast           = ref('');
+    const scrolled        = ref(false);
+    const searchQuery     = ref('');
+    const activeCategory  = ref('all');
+    const sortBy          = ref('default');
+
+    let toastTimer;
+
+    // ── GETTERS (computados desde store)
+    const filteredProducts = store.getters.filteredProducts;
+    const categories       = store.getters.categories;
+    const favorites        = store.getters.favorites;
+
+    // ── LIFECYCLE (Lección 1 — mounted y created)
+    // created → se simula con lógica antes de mounted
+    console.log('[Vue] created: inicializando componente');
+
+    onMounted(async () => {
+      console.log('[Vue] mounted: cargando productos desde API (Axios simulado con fetch)');
+      await fetchProducts();
+      window.addEventListener('scroll', () => {
+        scrolled.value = window.scrollY > 400;
+      });
+    });
+
+    // ── METHODS
+    async function fetchProducts() {
+      await store.actions_fetchProducts();
+    }
+
+    function setCategory(cat) {
+      activeCategory.value = cat;
+      store.mutations.SET_CATEGORY(cat);
+    }
+
+    function onSearch(e) {
+      store.mutations.SET_SEARCH(e.target.value);
+    }
+
+    function onSort() {
+      store.mutations.SET_SORT(sortBy.value);
+    }
+
+    function toggleFavorite(product) {
+      store.mutations.TOGGLE_FAV(product);
+      const msg = store.state.favoritos.items.find(p => p.id === product.id)
+        ? `❤️ "${product.title.slice(0,30)}..." guardado`
+        : `Eliminado de favoritos`;
+      showToast(msg);
+    }
+
+    function isFavorite(id) {
+      return store.state.favoritos.items.some(p => p.id === id);
+    }
+
+    function addToCart(product) {
+      store.mutations.INC_CART();
+      showToast(`🛒 "${product.title.slice(0,28)}..." agregado`);
+    }
+
+    function openModal(product) {
+      selectedProduct.value = product;
+    }
+
+    function toggleTheme() {
+      const next = store.state.ui.theme === 'dark' ? 'light' : 'dark';
+      store.mutations.SET_THEME(next);
+    }
+
+    function getCategoryEmoji(cat) {
+      const map = {
+        "electronics": "💻",
+        "jewelery": "💎",
+        "men's clothing": "👔",
+        "women's clothing": "👗",
+      };
+      return map[cat] || "📦";
+    }
+
+    function showToast(msg) {
+      toast.value = msg;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.value = '', 2500);
+    }
+
+    return {
+      // state
+      store,
+      selectedProduct, showFavPanel, showDebug,
+      toast, scrolled, searchQuery, activeCategory, sortBy,
+      // getters
+      filteredProducts, categories, favorites,
+      // methods
+      fetchProducts, setCategory, onSearch, onSort,
+      toggleFavorite, isFavorite, addToCart,
+      openModal, toggleTheme, getCategoryEmoji,
+    };
+  }
+}).mount('#app');
+</script>
+
+<!--
+╔══════════════════════════════════════════════════════════════════╗
+║  TESTS DOCUMENTACIÓN — Lección 4: Pruebas en Vue               ║
+╠══════════════════════════════════════════════════════════════════╣
+║                                                                  ║
+║  PRUEBA UNITARIA 1 — Vue Test Utils + Jest                       ║
+║  Archivo: tests/unit/ProductCard.spec.js                         ║
+║                                                                  ║
+║  import { mount } from '@vue/test-utils'                         ║
+║  import ProductCard from '@/components/ProductCard.vue'          ║
+║                                                                  ║
+║  describe('ProductCard', () => {                                 ║
+║    it('renders product title and price', () => {                 ║
+║      const product = {                                           ║
+║        id: 1, title: 'Test Product',                             ║
+║        price: 29.99, category: 'electronics',                   ║
+║        rating: { rate: 4.2, count: 50 }                         ║
+║      }                                                           ║
+║      const wrapper = mount(ProductCard, {                        ║
+║        props: { product }                                        ║
+║      })                                                          ║
+║      expect(wrapper.find('[data-testid="product-card"]')         ║
+║        .exists()).toBe(true)                                     ║
+║      expect(wrapper.text()).toContain('Test Product')            ║
+║      expect(wrapper.text()).toContain('$29.99')                  ║
+║    })                                                            ║
+║  })                                                              ║
+║                                                                  ║
+║  PRUEBA UNITARIA 2 — Error de API                                ║
+║  Archivo: tests/unit/ErrorState.spec.js                          ║
+║                                                                  ║
+║  it('shows error state when API fails', async () => {            ║
+║    const wrapper = mount(ProductList, {                          ║
+║      global: {                                                   ║
+║        plugins: [store]                                          ║
+║      }                                                           ║
+║    })                                                            ║
+║    await store.dispatch('productos/fetchProducts')               ║
+║    store.state.productos.error = 'Error 500'                     ║
+║    await nextTick()                                              ║
+║    expect(wrapper.find('#error-state').exists()).toBe(true)      ║
+║    expect(wrapper.find('.btn-retry').exists()).toBe(true)        ║
+║  })                                                              ║
+║                                                                  ║
+║  PRUEBA E2E — Cypress                                            ║
+║  Archivo: cypress/e2e/filter.cy.js                               ║
+║                                                                  ║
+║  describe('Product Filter', () => {                              ║
+║    it('filters products by category', () => {                    ║
+║      cy.visit('/')                                               ║
+║      cy.get('[data-testid="product-card"]')                      ║
+║        .should('have.length.greaterThan', 0)                     ║
+║      cy.contains('.chip', 'electronics').click()                 ║
+║      cy.get('[data-testid="product-card"]')                      ║
+║        .should('have.length.lessThan', 20)                       ║
+║      cy.get('.card-category')                                    ║
+║        .each($el => {                                            ║
+║          expect($el.text()).to.equal('electronics')              ║
+║        })                                                        ║
+║    })                                                            ║
+║  })                                                              ║
+╚══════════════════════════════════════════════════════════════════╝
+-->
+</body>
+</html>
